@@ -40,11 +40,14 @@
 
 			function Game() {
 				// 기본 변수
-				let camera = {x: 0, y: 0, z: 0, w: canvas.width/2, h: canvas.height/2, v: 1/2, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, zDistMin: 25, zDistMax: 150};
+				let cmr = {x: 0, y: 0, z: 0, w: canvas.width*2, h: canvas.height*2, v: 1/2, rX: 0, rY: 0, sX: 1, sY: 1, zDistMin: 25, zDistMax: 450};
+				cmr.sX = (cmr.w * 2) / canvas.width;
+				cmr.sY = (cmr.h * 2) / canvas.height;
+
 				let box_sprite_arr = [[0,1,2,3],[4,5,6,7],[4,5,1,0],[7,6,2,3],[0,4,7,3],[1,5,6,2]];//앞 뒤 위 아래 왼 오
 				
 				// 객체 변수
-				let box_1 = {x: 0, y: 0, z: 200, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
+				let box_1 = {x: -150, y: -150, z: 100, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
 
 				this.settingBox = function(box) {
 					//A B C D E F G H
@@ -63,10 +66,48 @@
 						console.log(box);
 						console.log('errMsg : 위 객체는 obj_box 형식이 아닙니다. [sprite.length < 8]');
 					} else {
-						let spr = box.sprite;
+						let spr = box.sprite, gx = [], gy = [];
 						for (let i = 0; i < 6; i++) {
 							let arr = box_sprite_arr[i];
 
+							//먼 곳 -> 가까운 곳, 아래 -> 위 순으로 그리기
+							let distS = 0, distX = 0, distY = 0, distZ = 0, projX = 0, projY = 0;
+							gx[i] = [];
+							gy[i] = [];
+							for (let j = 0; j < 4; j++) {
+								distX = Math.cos(cmr.x - spr[arr[j]][0]);
+								distY = Math.sin(cmr.y - spr[arr[j]][1]);
+								distZ = cmr.z - spr[arr[j]][2];
+								distS = Math.sqrt(distX*distX + distY*distY + distZ*distZ);
+								distZ = (spr[arr[j]][2] - cmr.z) - cmr.zDistMin;
+								//사라지는 거 말고 다른 방법은 없는지
+								if(0 > distZ || distZ > cmr.zDistMax - cmr.zDistMin) {
+									j = 4;
+								} else {
+									// 배치
+									projX = distS * (spr[arr[j]][0] - cmr.x);
+									projY = distS * (spr[arr[j]][1] - cmr.y);
+	
+									// z축 계산
+									projX /= distZ;
+									projY /= distZ;
+
+									// 카메라 크기 계산
+									projX /= cmr.sX;
+									projY /= cmr.sY;
+
+									// 중앙에 표시
+									projX += cmr.w / cmr.sX;
+									projY += cmr.h / cmr.sY;
+
+									gx[i][j] = projX;
+									gy[i][j] = projY;
+								}
+
+							}
+						}
+
+						for (let i = 0; i < 6; i++) {
 							ctx.strokeStyle = 'black';
 							ctx.lineWidth = 0.5;
 							ctx.fillStyle = box.color;
@@ -88,25 +129,14 @@
 								break;
 							}
 
-							let gx = [], gy = [], distS = 0, distX = 0, distY = 0, distZ = 0;
-							for (let j = 0; j < 4; j++) {
-								distX = Math.cos(camera.x - spr[arr[j]][0]);
-								distY = Math.sin(camera.y - spr[arr[j]][1]);
-								distZ = camera.z - spr[arr[j]][2];
-								distS = Math.sqrt(distX*distX + distY*distY + distZ*distZ);
-								gx[j] = ((distS * spr[arr[j]][0]) / (spr[arr[j]][2] - camera.zDistMin)) + camera.w;
-								gy[j] = ((distS * spr[arr[j]][1]) / (spr[arr[j]][2] - camera.zDistMin)) + camera.h;
-
-							}
-
-								ctx.beginPath();
-								ctx.moveTo(gx[0], gy[0]);
-								ctx.lineTo(gx[1], gy[1]);
-								ctx.lineTo(gx[2], gy[2]);
-								ctx.lineTo(gx[3], gy[3]);
-								ctx.stroke();
-								ctx.fill();
-								ctx.closePath();
+							ctx.beginPath();
+							ctx.moveTo(gx[i][0], gy[i][0]);
+							ctx.lineTo(gx[i][1], gy[i][1]);
+							ctx.lineTo(gx[i][2], gy[i][2]);
+							ctx.lineTo(gx[i][3], gy[i][3]);
+							ctx.stroke();
+							ctx.fill();
+							ctx.closePath();
 						}
 					}
 				}
@@ -119,62 +149,44 @@
 					this.settingBox(box_1);
 					this.drawBox(box_1);
 					setInterval(function() {
-						let d = 0;
+						let d = 0, spd = 15;
 						if (keys.indexOf('w') != -1) {
-							box_1.y -= 5; d = 1;
+							box_1.y -= spd; d = 1;
 						}
 						if (keys.indexOf('s') != -1) {
-							box_1.y += 5; d = 1;
+							box_1.y += spd; d = 1;
 						}
 						if (keys.indexOf('a') != -1) {
-							box_1.x -= 5; d = 1;
+							box_1.x -= spd; d = 1;
 						}
 						if (keys.indexOf('d') != -1) {
-							box_1.x += 5; d = 1;
+							box_1.x += spd; d = 1;
 						}
 						if (keys.indexOf('r') != -1) {
-							box_1.z += 5; d = 1;
+							box_1.z += spd; d = 1;
 						}
 						if (keys.indexOf('f') != -1) {
-							box_1.z -= 5; d = 1;
+							box_1.z -= spd; d = 1;
 						}
 
-						if (keys.indexOf('1') != -1) {
-							//console.log('x: ' + box_1.x + ', y: ' + box_1.y + ', z: ' + box_1.z);
-							let  spr = box_1.sprite, arr = box_sprite_arr[0], gx = [], gy = [], distS = 0, distX = 0, distY = 0, distZ = 0;
-							for (let j = 0; j < 4; j++) {
-								distX = camera.x - spr[arr[j]][0];
-								distY = camera.y - spr[arr[j]][1];
-								distZ = camera.z - spr[arr[j]][2];
-								distS = Math.sqrt(distX*distX + distY*distY + distZ*distZ);
-								gx[j] = ((distS * spr[arr[j]][0]) / (spr[arr[j]][2] - camera.zDistMin)) + camera.w;
-								gy[j] = ((distS * spr[arr[j]][1]) / (spr[arr[j]][2] - camera.zDistMin)) + camera.h;
-							}
-							console.log('\t\tx\t\ty\t\tz');
-							console.log(gx[0] + '\t' + gx[1] + '\t' + gy[0] + '\t' + gy[1] + '\t' + spr[arr[0]][2] + '\t' + spr[arr[1]][2]);
-							console.log('\t\t' + box_1.x + '\t\t' + box_1.y + '\t\t' + box_1.z);
-							console.log(gx[3] + '\t' + gx[2] + '\t' + gy[3] + '\t' + gy[2] + '\t' + spr[arr[3]][2] + '\t' + spr[arr[2]][2]);
-							console.log('\n');
-						}
-
-						/*if (keys.indexOf('u') != -1) {
-							camera.y -= 5; d = 1;
+						if (keys.indexOf('u') != -1) {
+							cmr.y -= spd; d = 1;
 						}
 						if (keys.indexOf('j') != -1) {
-							camera.y += 5; d = 1;
+							cmr.y += spd; d = 1;
 						}
 						if (keys.indexOf('h') != -1) {
-							camera.x -= 5; d = 1;
+							cmr.x -= spd; d = 1;
 						}
 						if (keys.indexOf('k') != -1) {
-							camera.x += 5; d = 1;
+							cmr.x += spd; d = 1;
 						}
 						if (keys.indexOf('o') != -1) {
-							camera.z += 5; d = 1;
+							cmr.z += spds; d = 1;
 						}
 						if (keys.indexOf('l') != -1) {
-							camera.z -= 5; d = 1;
-						}*/
+							cmr.z -= spd; d = 1;
+						}
 						gcan.clearCanvas();
 						gcan.settingBox(box_1);
 						gcan.drawBox(box_1);
