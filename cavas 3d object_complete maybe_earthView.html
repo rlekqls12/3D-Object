@@ -47,7 +47,7 @@
 				let box_sprite_arr = [[0,1,2,3],[4,5,6,7],[4,5,1,0],[7,6,2,3],[0,4,7,3],[1,5,6,2]];//앞 뒤 위 아래 왼 오
 				
 				// 객체 변수
-				let box_1 = {x: -150, y: -150, z: 100, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
+				let box_1 = {x: -150, y: -150, z: 300, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
 
 				this.settingBox = function(box) {
 					//A B C D E F G H
@@ -78,13 +78,17 @@
 								distX = cmr.x - spr[arr[j]][0];
 								distY = cmr.y - spr[arr[j]][1];
 								distZ = cmr.z - spr[arr[j]][2];
-								distD = distZ + cmr.zDistMin;
+								distD = Math.abs(Math.sqrt(distX*distX + distY*distY + distZ*distZ) + cmr.zDistMin);
 
+								//사라지는 거 말고 다른 방법은 없는지
+								//if(0 > distZ || distZ > cmr.zDistMax - cmr.zDistMin) {
+								//	j = 4;
+								//} else {
 									// 배치
-									projX = -distX;
-									projY = -distY;
+									projX = distX * Math.pow(distZ / distD, 1);
+									projY = distY * Math.pow(distZ / distD, 1);
 	
-									// z축 계산 (깊이 계산) 이거 사용 X
+									// z축 계산 (깊이 계산)
 									//projX *= Math.pow(distZ / distD, 9);
 									//projY *= Math.pow(distZ / distD, 9);
 
@@ -98,6 +102,7 @@
 
 									gx[i][j] = projX;
 									gy[i][j] = projY;
+								//}
 
 							}
 						}

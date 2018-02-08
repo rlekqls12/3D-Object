@@ -71,22 +71,28 @@
 							let arr = box_sprite_arr[i];
 
 							//먼 곳 -> 가까운 곳, 아래 -> 위 순으로 그리기
-							let distD = 0, distX = 0, distY = 0, distZ = 0, projX = 0, projY = 0;
+							let distS = 0, distX = 0, distY = 0, distZ = 0, projX = 0, projY = 0;
 							gx[i] = [];
 							gy[i] = [];
 							for (let j = 0; j < 4; j++) {
-								distX = cmr.x - spr[arr[j]][0];
-								distY = cmr.y - spr[arr[j]][1];
+								distX = Math.cos(cmr.x - spr[arr[j]][0]);
+								distY = Math.sin(cmr.y - spr[arr[j]][1]);
 								distZ = cmr.z - spr[arr[j]][2];
-								distD = distZ + cmr.zDistMin;
+								//distS = Math.sqrt(distX*distX + distY*distY + distZ*distZ);
+								distS = Math.sqrt(distZ*distZ);
+								distZ = (spr[arr[j]][2] - cmr.z) - cmr.zDistMin;
 
+								//사라지는 거 말고 다른 방법은 없는지
+								if(0 > distZ || distZ > cmr.zDistMax - cmr.zDistMin) {
+									j = 4;
+								} else {
 									// 배치
-									projX = -distX;
-									projY = -distY;
+									projX = distS * (spr[arr[j]][0] - cmr.x);
+									projY = distS * (spr[arr[j]][1] - cmr.y);
 	
-									// z축 계산 (깊이 계산) 이거 사용 X
-									//projX *= Math.pow(distZ / distD, 9);
-									//projY *= Math.pow(distZ / distD, 9);
+									// z축 계산 (깊이 계산)
+									projX /= distZ;
+									projY /= distZ;
 
 									// 카메라 크기 계산
 									projX /= cmr.sX;
@@ -98,6 +104,7 @@
 
 									gx[i][j] = projX;
 									gy[i][j] = projY;
+								}
 
 							}
 						}

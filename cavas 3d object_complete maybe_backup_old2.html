@@ -40,14 +40,14 @@
 
 			function Game() {
 				// 기본 변수
-				let cmr = {x: 0, y: 0, z: 0, w: canvas.width*2, h: canvas.height*2, v: 1/2, rX: 0, rY: 0, sX: 1, sY: 1, zDistMin: 25, zDistMax: 450};
+				let cmr = {x: 0, y: 0, z: 0, w: canvas.width*12, h: canvas.height*12, v: 1/2, rX: 0, rY: 0, sX: 1, sY: 1, zDistMin: 25, zDistMax: 450};
 				cmr.sX = (cmr.w * 2) / canvas.width;
 				cmr.sY = (cmr.h * 2) / canvas.height;
 
 				let box_sprite_arr = [[0,1,2,3],[4,5,6,7],[4,5,1,0],[7,6,2,3],[0,4,7,3],[1,5,6,2]];//앞 뒤 위 아래 왼 오
 				
 				// 객체 변수
-				let box_1 = {x: -150, y: -150, z: 100, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
+				let box_1 = {x: -150, y: -150, z: 1000, w: 25, h: 25, v: 25, rX: 0, rY: 0, sX: 1, sY: 1, sZ: 1, color: 'green', sprite: []};
 
 				this.settingBox = function(box) {
 					//A B C D E F G H
@@ -78,13 +78,13 @@
 								distX = cmr.x - spr[arr[j]][0];
 								distY = cmr.y - spr[arr[j]][1];
 								distZ = cmr.z - spr[arr[j]][2];
-								distD = distZ + cmr.zDistMin;
+								distD = Math.abs(distZ + cmr.zDistMin);
 
 									// 배치
-									projX = -distX;
-									projY = -distY;
+									projX = distX * Math.pow(distZ / distD, 139);
+									projY = distY * Math.pow(distZ / distD, 139);
 	
-									// z축 계산 (깊이 계산) 이거 사용 X
+									// z축 계산 (깊이 계산)
 									//projX *= Math.pow(distZ / distD, 9);
 									//projY *= Math.pow(distZ / distD, 9);
 
